@@ -1,6 +1,6 @@
 {
-  "name": "react-native",
-  "version": "0.57.4",
+  "name": "@hedviginsurance/react-native",
+  "version": "0.57.41",
   "description": "A framework for building native apps using React",
   "license": "MIT",
   "repository": {

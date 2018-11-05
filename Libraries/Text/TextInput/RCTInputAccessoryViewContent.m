@@ -11,72 +11,83 @@
 
 @implementation RCTInputAccessoryViewContent
 {
-  UIView *_safeAreaContainer;
-  NSLayoutConstraint *_heightConstraint;
+    UIView *_safeAreaContainer;
+    UIVisualEffectView *_blurView;
+    NSLayoutConstraint *_heightConstraint;
 }
 
 - (instancetype)init
 {
-  if (self = [super init]) {
-    _safeAreaContainer = [UIView new];
-    [self addSubview:_safeAreaContainer];
-
-    // Use autolayout to position the view properly and take into account
-    // safe area insets on iPhone X.
-    // TODO: Support rotation, anchor to left and right without breaking frame x coordinate (T27974328).
-    self.autoresizingMask = UIViewAutoresizingFlexibleHeight;
-    _safeAreaContainer.translatesAutoresizingMaskIntoConstraints = NO;
-
-    _heightConstraint = [_safeAreaContainer.heightAnchor constraintEqualToConstant:0];
-    _heightConstraint.active = YES;
-
-    if (@available(iOS 11.0, *)) {
-      [_safeAreaContainer.bottomAnchor constraintEqualToAnchor:self.safeAreaLayoutGuide.bottomAnchor].active = YES;
-      [_safeAreaContainer.topAnchor constraintEqualToAnchor:self.safeAreaLayoutGuide.topAnchor].active = YES;
-      [_safeAreaContainer.leadingAnchor constraintEqualToAnchor:self.safeAreaLayoutGuide.leadingAnchor].active = YES;
-      [_safeAreaContainer.trailingAnchor constraintEqualToAnchor:self.safeAreaLayoutGuide.trailingAnchor].active = YES;
-    } else {
-      [_safeAreaContainer.bottomAnchor constraintEqualToAnchor:self.bottomAnchor].active = YES;
-      [_safeAreaContainer.topAnchor constraintEqualToAnchor:self.topAnchor].active = YES;
-      [_safeAreaContainer.leadingAnchor constraintEqualToAnchor:self.leadingAnchor].active = YES;
-      [_safeAreaContainer.trailingAnchor constraintEqualToAnchor:self.trailingAnchor].active = YES;
+    if (self = [super init]) {
+        UIVisualEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleLight];
+        
+        _blurView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
+        [_blurView setBackgroundColor: [UIColor.whiteColor colorWithAlphaComponent:0.5]];
+        _safeAreaContainer = [UIView new];
+        
+        [_blurView.contentView addSubview:_safeAreaContainer];
+        [self addSubview:_blurView];
+        
+        // Use autolayout to position the view properly and take into account
+        // safe area insets on iPhone X.
+        // TODO: Support rotation, anchor to left and right without breaking frame x coordinate (T27974328).
+        self.autoresizingMask = UIViewAutoresizingFlexibleHeight;
+        _blurView.autoresizingMask = UIViewAutoresizingFlexibleHeight;
+        _safeAreaContainer.translatesAutoresizingMaskIntoConstraints = NO;
+        
+        
+        _heightConstraint = [_safeAreaContainer.heightAnchor constraintEqualToConstant:0];
+        _heightConstraint.active = YES;
+        
+        if (@available(iOS 11.0, *)) {
+            [_safeAreaContainer.bottomAnchor constraintEqualToAnchor:self.safeAreaLayoutGuide.bottomAnchor].active = YES;
+            [_safeAreaContainer.topAnchor constraintEqualToAnchor:self.safeAreaLayoutGuide.topAnchor].active = YES;
+            [_safeAreaContainer.leadingAnchor constraintEqualToAnchor:self.safeAreaLayoutGuide.leadingAnchor].active = YES;
+            [_safeAreaContainer.trailingAnchor constraintEqualToAnchor:self.safeAreaLayoutGuide.trailingAnchor].active = YES;
+        } else {
+            [_safeAreaContainer.bottomAnchor constraintEqualToAnchor:self.bottomAnchor].active = YES;
+            [_safeAreaContainer.topAnchor constraintEqualToAnchor:self.topAnchor].active = YES;
+            [_safeAreaContainer.leadingAnchor constraintEqualToAnchor:self.leadingAnchor].active = YES;
+            [_safeAreaContainer.trailingAnchor constraintEqualToAnchor:self.trailingAnchor].active = YES;
+        }
+        
     }
-  }
-  return self;
+    return self;
 }
 
 - (CGSize)intrinsicContentSize
 {
-  // This is needed so the view size is based on autolayout constraints.
-  return CGSizeZero;
+    // This is needed so the view size is based on autolayout constraints.
+    return CGSizeZero;
 }
 
 - (void)reactSetFrame:(CGRect)frame
 {
-  // We still need to set the frame here, otherwise it won't be
-  // measured until moved to the window during the keyboard opening
-  // animation. If this happens, the height will be animated from 0 to
-  // its actual size and we don't want that.
-  [self setFrame:frame];
-  [_safeAreaContainer setFrame:frame];
-
-  _heightConstraint.constant = frame.size.height;
-  [self layoutIfNeeded];
+    // We still need to set the frame here, otherwise it won't be
+    // measured until moved to the window during the keyboard opening
+    // animation. If this happens, the height will be animated from 0 to
+    // its actual size and we don't want that.
+    [self setFrame:frame];
+    [_safeAreaContainer setFrame:frame];
+    [_blurView setFrame:frame];
+    
+    _heightConstraint.constant = frame.size.height;
 }
 
 - (void)insertReactSubview:(UIView *)subview atIndex:(NSInteger)index
 {
-  [super insertReactSubview:subview atIndex:index];
-  [_safeAreaContainer insertSubview:subview atIndex:index];
+    
+    [super insertReactSubview:subview atIndex:index];
+    [_safeAreaContainer insertSubview:subview atIndex:index];
 }
 
 - (void)removeReactSubview:(UIView *)subview
 {
-  [super removeReactSubview:subview];
-  [subview removeFromSuperview];
-  if ([[_safeAreaContainer subviews] count] == 0 && [self isFirstResponder]) {
-    [self resignFirstResponder];
-  }
+    [super removeReactSubview:subview];
+    [subview removeFromSuperview];
+    if ([[_safeAreaContainer subviews] count] == 0 && [self isFirstResponder]) {
+        [self resignFirstResponder];
+    }
 }
 
 @end
